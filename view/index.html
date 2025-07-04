@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercícios API</title>
+    <link rel="stylesheet" href="/styles/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Seção 1: Listar Tarefas -->
+        <section class="card">
+            <h2>✅ Lista de Tarefas</h2>
+            <button id="btnTarefas">Mostrar 10 Primeiras Tarefas</button>
+            <div id="tarefasResult" class="result-container"></div>
+        </section>
+
+        <!-- Seção 2: Formulário de Comentários -->
+        <section class="card">
+            <h2>📝 Adicionar Comentário</h2>
+            <form id="comentarioForm">
+                <div class="form-group">
+                    <label for="nome">Nome:</label>
+                    <input type="text" id="nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="comentario">Comentário:</label>
+                    <textarea id="comentario" required></textarea>
+                </div>
+                <button type="submit">Enviar Comentário</button>
+            </form>
+            <div id="comentarioResult" class="result-container"></div>
+        </section>
+
+        <!-- Seção 3: Busca de Personagens -->
+        <section class="card">
+            <h2>🧠 Busca de Personagens (Rick and Morty)</h2>
+            <div class="search-group">
+                <input type="text" id="personagemInput" placeholder="Digite o nome do personagem">
+                <button id="btnBuscar">Buscar</button>
+            </div>
+            <div id="personagensResult" class="result-container grid-container"></div>
+        </section>
+    </div>
+
+    <script src="/scripts/script.js"></script>
+</body>
+</html>
