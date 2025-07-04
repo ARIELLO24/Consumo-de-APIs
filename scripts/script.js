@@ -1,42 +1,71 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Listar Tarefas
-    document.getElementById('btnTarefas').addEventListener('click', async function() {
-        const resultDiv = document.getElementById('tarefasResult');
-        resultDiv.innerHTML = '<p>Carregando tarefas...</p>';
+    // Elementos do DOM
+    const btnTarefas = document.getElementById('btnTarefas');
+    const tarefasResult = document.getElementById('tarefasResult');
+    const comentarioForm = document.getElementById('comentarioForm');
+    const comentarioResult = document.getElementById('comentarioResult');
+    const btnBuscar = document.getElementById('btnBuscar');
+    const personagemInput = document.getElementById('personagemInput');
+    const personagensResult = document.getElementById('personagensResult');
+
+    // 1. Listar Tarefas com Fallback
+    btnTarefas.addEventListener('click', async function() {
+        tarefasResult.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Carregando tarefas...</p>';
         
         try {
-            const response = await fetch('https://jsonplaceholder.typicode.com/todos');
-            const tarefas = await response.json();
-            
-            let html = '<h3>10 Primeiras Tarefas:</h3><ul>';
-            tarefas.slice(0, 10).forEach(tarefa => {
-                html += `<li class="${tarefa.completed ? 'completed' : 'incomplete'}">
-                    ${tarefa.title} - <strong>${tarefa.completed ? 'Completa' : 'Incompleta'}</strong>
-                </li>`;
-            });
-            html += '</ul>';
-            
-            resultDiv.innerHTML = html;
+            // Tenta API principal
+            const response = await fetch('https://dummyjson.com/todos?limit=5');
+            const { todos } = await response.json();
+            showTasks(todos);
         } catch (error) {
-            resultDiv.innerHTML = '<p class="error">Erro ao carregar tarefas. Tente novamente.</p>';
-            console.error('Erro:', error);
+            console.error('Erro na API principal:', error);
+            // Fallback para API alternativa
+            try {
+                const backupResponse = await fetch('https://jsonplaceholder.typicode.com/todos?_limit=5');
+                const backupData = await backupResponse.json();
+                const adaptedTasks = backupData.map(task => ({
+                    todo: task.title,
+                    completed: task.completed
+                }));
+                showTasks(adaptedTasks);
+            } catch (backupError) {
+                console.error('Erro no backup:', backupError);
+                // Fallback para dados locais
+                const localTasks = [
+                    { todo: "Fazer compras", completed: false },
+                    { todo: "Estudar JavaScript", completed: true },
+                    { todo: "Limpar a casa", completed: false }
+                ];
+                showTasks(localTasks);
+            }
         }
     });
 
+    function showTasks(tasks) {
+        let html = '<ul>';
+        tasks.forEach(task => {
+            html += `
+                <li class="${task.completed ? 'completed' : 'incomplete'}">
+                    ${task.todo} - ${task.completed ? 'Completa' : 'Incompleta'}
+                </li>`;
+        });
+        html += '</ul>';
+        tarefasResult.innerHTML = html;
+    }
+
     // 2. Formulário de Comentários
-    document.getElementById('comentarioForm').addEventListener('submit', async function(e) {
+    comentarioForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const nome = document.getElementById('nome').value;
         const comentario = document.getElementById('comentario').value;
-        const resultDiv = document.getElementById('comentarioResult');
         
         if (!nome || !comentario) {
-            resultDiv.innerHTML = '<p class="error">Preencha todos os campos.</p>';
+            comentarioResult.innerHTML = '<p class="error">Preencha todos os campos.</p>';
             return;
         }
         
-        resultDiv.innerHTML = '<p>Enviando comentário...</p>';
+        comentarioResult.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Enviando...</p>';
         
         try {
             const response = await fetch('https://jsonplaceholder.typicode.com/comments', {
@@ -52,71 +81,56 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             const data = await response.json();
-            resultDiv.innerHTML = `
-                <h3>Comentário Enviado com Sucesso!</h3>
+            comentarioResult.innerHTML = `
                 <p><strong>Nome:</strong> ${data.name}</p>
                 <p><strong>Comentário:</strong> ${data.body}</p>
-                <p class="note">Observação: Esta é uma API de teste. O comentário não será realmente armazenado.</p>
+                <p><em>(API de teste - dados não são armazenados)</em></p>
             `;
             
-            // Limpa o formulário
-            document.getElementById('comentarioForm').reset();
+            comentarioForm.reset();
         } catch (error) {
-            resultDiv.innerHTML = '<p class="error">Erro ao enviar comentário. Tente novamente.</p>';
+            comentarioResult.innerHTML = '<p class="error">Erro ao enviar comentário.</p>';
             console.error('Erro:', error);
         }
     });
 
     // 3. Busca de Personagens
-    document.getElementById('btnBuscar').addEventListener('click', buscarPersonagem);
-    document.getElementById('personagemInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            buscarPersonagem();
-        }
+    btnBuscar.addEventListener('click', buscarPersonagem);
+    personagemInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') buscarPersonagem();
     });
 
     async function buscarPersonagem() {
-        const nomePersonagem = document.getElementById('personagemInput').value.trim();
-        const resultadoDiv = document.getElementById('personagensResult');
+        const nomePersonagem = personagemInput.value.trim();
         
         if (!nomePersonagem) {
-            resultadoDiv.innerHTML = '<p class="error">Digite o nome de um personagem.</p>';
+            personagensResult.innerHTML = '<p class="error">Digite um nome.</p>';
             return;
         }
         
-        resultadoDiv.innerHTML = '<p>Buscando personagens...</p>';
+        personagensResult.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Buscando...</p>';
         
         try {
             const response = await fetch(`https://rickandmortyapi.com/api/character/?name=${nomePersonagem}`);
             const data = await response.json();
             
             if (data.error) {
-                resultadoDiv.innerHTML = `<p class="error">Personagem "${nomePersonagem}" não encontrado.</p>`;
+                personagensResult.innerHTML = '<p class="error">Personagem não encontrado.</p>';
                 return;
             }
             
-            if (data.results && data.results.length > 0) {
-                let html = '';
-                data.results.forEach(personagem => {
-                    html += `
-                        <div class="character-card">
-                            <img src="${personagem.image}" alt="${personagem.name}">
-                            <div class="character-info">
-                                <h3>${personagem.name}</h3>
-                                <p>
-                                    <span class="status ${personagem.status.toLowerCase()}"></span>
-                                    ${personagem.status} - ${personagem.species}
-                                </p>
-                            </div>
-                        </div>
-                    `;
-                });
-                resultadoDiv.innerHTML = html;
-            } else {
-                resultadoDiv.innerHTML = `<p class="error">Nenhum personagem encontrado com o nome "${nomePersonagem}".</p>`;
-            }
+            let html = '';
+            data.results.forEach(personagem => {
+                html += `
+                    <div>
+                        <img src="${personagem.image}" alt="${personagem.name}" width="100">
+                        <p><strong>${personagem.name}</strong></p>
+                        <p>${personagem.status} - ${personagem.species}</p>
+                    </div>`;
+            });
+            personagensResult.innerHTML = html;
         } catch (error) {
-            resultadoDiv.innerHTML = '<p class="error">Erro na busca. Tente novamente.</p>';
+            personagensResult.innerHTML = '<p class="error">Erro na busca.</p>';
             console.error('Erro:', error);
         }
     }
